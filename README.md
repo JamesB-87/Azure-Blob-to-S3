@@ -1,6 +1,7 @@
 # Azure Storage to AWS S3
 
-[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://dev.azure.com/jamesbroxton/_git/Blob-to-S3?version=GBmain&path=/deploy/azure.deploy.json)
+[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://github.com/JamesB-87/Azure-Blob-to-S3/blob/9d39bd3852e395e4430e3e3f9797db767da48151/deploy/azure.deploy.json)
+
 
 
 This is a solution based on Azure Functions to transfer Azure Blob Storage files to AWS S3.

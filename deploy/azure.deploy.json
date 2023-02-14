@@ -37,7 +37,7 @@
     },
     "functionAppRepoUrl": {
       "type": "string",
-      "defaultValue": "https://dev.azure.com/jamesbroxton/_git/Blob-to-S3",
+      "defaultValue": "https://github.com/JamesB-87/Azure-Blob-to-S3",
       "metadata": {
         "description": "The function application repository to be deployed -change if forked"
       }

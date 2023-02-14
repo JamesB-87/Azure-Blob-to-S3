@@ -12,7 +12,7 @@ param archiveContainerName string = 'archive'
 param liveContainerName string = 'live'
 
 @description('The function application repository to be deployed -change if forked')
-param functionAppRepoUrl string = 'https://dev.azure.com/jamesbroxton/_git/Blob-to-S3'
+param functionAppRepoUrl string = 'https://github.com/JamesB-87/Azure-Blob-to-S3'
 
 @description('The function application repository branch to be deployed')
 param functionAppRepoBranch string = 'main'
