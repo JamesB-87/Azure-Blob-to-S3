@@ -1,7 +1,5 @@
 # Azure Storage to AWS S3
 
-**[![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fnianton%2Fazstorage-to-s3%2Fmain%2Fdeploy%2Fazure.deploy.json)
-
 [![Deploy To Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://dev.azure.com/jamesbroxton/_git/Blob-to-S3?version=GBmain&path=/deploy/azure.deploy.json)
 
 
