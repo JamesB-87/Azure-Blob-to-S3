@@ -24,3 +24,28 @@ The architecture of the solution is as depicted on the following diagram:
 As an example, below are the resources created when running the deployment with project: *'blobtos3'* and environment: *'dev'*
 
 ![Artitectural Diagram](./assets/AzStorage-to-AwsS3-resources.png?raw=true)
+
+Hardcoded to us London region, update line 18 in the config.cs under src/azstoragetransfer/azstoragetransfer.funcapp - 'public static RegionEndpoint Region { get; } = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AwsRegion") ?? RegionEndpoint.EUWest2.SystemName);' & local.settings.stub.json on line 14 - '    "AwsRegion": "eu-west-2"'
+
+
+
+
+S3 Bucket requires a user created and not using root account, access key is generated under the IAM for said user
+The S3 bucket will require only an access policy and does not require any changes to make the bucket publicly availble
+Access policy: 
+"{
+    "Version": "2012-10-17",
+    "Id": "Policy1676627176428",
+    "Statement": [
+        {
+            "Sid": "Stmt1676627173502",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::#############:user/USERNAME"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::S£BUCKETNAME/*"
+        }
+    ]
+}
+"
