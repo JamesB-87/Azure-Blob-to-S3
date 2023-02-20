@@ -28,7 +28,7 @@ As an example, below are the resources created when running the deployment with 
 
 
 ## S3 Bucket Configuration
-* **S3 Bucket Policy**:S3 Bucket requires a user created and not using root account, access key is generated under the IAM for said user
+* **S3 Bucket Policy**: S3 Bucket requires a user created and not using root account, access key is generated under the IAM for said user
                         The S3 bucket will require only an access policy and does not require any changes to make the bucket publicly availble
                         Access policy: 
                             "{
@@ -48,4 +48,4 @@ As an example, below are the resources created when running the deployment with 
                             }
                             "
 
-* **S3 Bucket Region Settings**:Hardcoded to us London region, update line 18 in the config.cs under src/azstoragetransfer/azstoragetransfer.funcapp - 'public static RegionEndpoint Region { get; } = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AwsRegion") ?? RegionEndpoint.EUWest2.SystemName);' & local.settings.stub.json on line 14 - '    "AwsRegion": "eu-west-2"'
+* **S3 Bucket Region Settings**: Hardcoded to us London region, update line 18 in the config.cs under src/azstoragetransfer/azstoragetransfer.funcapp - 'public static RegionEndpoint Region { get; } = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AwsRegion") ?? RegionEndpoint.EUWest2.SystemName);' & local.settings.stub.json on line 14 - '    "AwsRegion": "eu-west-2"'
