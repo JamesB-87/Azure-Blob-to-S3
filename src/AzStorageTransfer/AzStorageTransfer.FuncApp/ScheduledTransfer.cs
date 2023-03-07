@@ -79,7 +79,22 @@ namespace AzStorageTransfer.FuncApp
                 ms.Seek(0, SeekOrigin.Begin);
 
                 // Transfer to Amazon S3
-                await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, cloudBlob.Name, ms, new Dictionary<string, object>());
+                //await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, cloudBlob.Name, ms, new Dictionary<string, object>());
+                var transfer = new Amazon.S3.Transfer.TransferUtility(amazonS3);
+                var request = new Amazon.S3.Transfer.TransferUtilityUploadRequest
+                {
+                    BucketName = Config.Aws.BucketName,
+                    Key = name,
+                    InputStream = ms,
+                    
+                };
+                
+                request.Headers.ContentMD5 = myBlob.Properties.ContentMD5;
+
+                IDictionary<string, object> additionalProperties = new Dictionary<string, object>();
+                InternalSDKUtils.ApplyValues(request, additionalProperties);
+                
+                transfer.Upload(request);
                 log.LogInformation($"File '{cloudBlob.Name}' uploaded to S3.");
             }
 
