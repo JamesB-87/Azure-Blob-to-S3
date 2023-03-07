@@ -1,4 +1,5 @@
 using Amazon.S3;
+using Amazon.Util.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Storage;
@@ -79,22 +80,24 @@ namespace AzStorageTransfer.FuncApp
                 ms.Seek(0, SeekOrigin.Begin);
 
                 // Transfer to Amazon S3
-                //await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, cloudBlob.Name, ms, new Dictionary<string, object>());
+                //await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, cloudBlob.Name, ms, new Dictionary<string, object>() );
+
                 var transfer = new Amazon.S3.Transfer.TransferUtility(amazonS3);
                 var request = new Amazon.S3.Transfer.TransferUtilityUploadRequest
                 {
                     BucketName = Config.Aws.BucketName,
-                    Key = name,
+                    Key = cloudBlob.Name,
                     InputStream = ms,
-                    
+
                 };
-                
-                request.Headers.ContentMD5 = myBlob.Properties.ContentMD5;
+
+                request.Headers.ContentMD5 = cloudBlob.Properties.ContentMD5;
 
                 IDictionary<string, object> additionalProperties = new Dictionary<string, object>();
                 InternalSDKUtils.ApplyValues(request, additionalProperties);
-                
+
                 transfer.Upload(request);
+
                 log.LogInformation($"File '{cloudBlob.Name}' uploaded to S3.");
             }
 
