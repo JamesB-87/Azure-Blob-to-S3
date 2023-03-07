@@ -35,7 +35,8 @@ namespace AzStorageTransfer.FuncApp
                     b.Name, 
                     b.Properties, 
                     b.Uri, 
-                    b.Metadata, 
+                    b.Metadata,
+                    b.Properties.ContentMD5,
                     Container = b.Container.Name 
                 });
 
