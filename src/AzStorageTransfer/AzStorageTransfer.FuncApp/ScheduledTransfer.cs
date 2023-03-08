@@ -19,7 +19,7 @@ namespace AzStorageTransfer.FuncApp
         /// <summary>
         /// Cron expression to schedule execution.
         /// </summary>
-        private const string CronSchedule = "0 */1 * * * *";
+        private const string CronSchedule = "0 */60 * * * *";
 
         /// <summary>
         /// Amazon S3 client.
@@ -123,7 +123,7 @@ namespace AzStorageTransfer.FuncApp
             {
                 var dateTime = cloudBlob.Properties.LastModified.Value.UtcDateTime;
                 TimeSpan ts = DateTime.UtcNow - dateTime;
-                if(ts.TotalMinutes >= 2)
+                if(ts.Totaldays >= 14)
                 {
                     // Delete file from scheduled container
                     await cloudBlob.DeleteAsync();
