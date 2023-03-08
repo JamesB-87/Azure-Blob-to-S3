@@ -19,7 +19,7 @@ namespace AzStorageTransfer.FuncApp
         /// <summary>
         /// Cron expression to schedule execution.
         /// </summary>
-        private const string CronSchedule = "0 */5 * * * *";
+        private const string CronSchedule = "0 */1 * * * *";
 
         /// <summary>
         /// Amazon S3 client.
@@ -49,6 +49,12 @@ namespace AzStorageTransfer.FuncApp
             foreach (CloudBlockBlob item in blobItems)
             {
                 await TrasferAndArchiveBlobAsync(item, log);
+            }
+
+            var archiveBlobItems = archiveBlobContainer.ListBlobs(useFlatBlobListing: true);
+            foreach(CloudBlockBlob item in archiveBlobItems)
+            {
+                await CheckArchiveBlobAsync(item, log);
             }
         }
 
@@ -81,7 +87,7 @@ namespace AzStorageTransfer.FuncApp
 
                 // Transfer to Amazon S3
                 //await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, cloudBlob.Name, ms, new Dictionary<string, object>() );
-
+                
                 var transfer = new Amazon.S3.Transfer.TransferUtility(amazonS3);
                 var request = new Amazon.S3.Transfer.TransferUtilityUploadRequest
                 {
@@ -109,6 +115,22 @@ namespace AzStorageTransfer.FuncApp
             // Delete file from scheduled container
             await cloudBlob.DeleteAsync();
             log.LogInformation($"File '{cloudBlob.Name}' deleted from container: {Config.ScheduledContainer}.");
+        }
+
+        private async Task CheckArchiveBlobAsync(CloudBlockBlob cloudBlob, ILogger log)
+        {
+            if(cloudBlob.Properties.LastModified != null)
+            {
+                var dateTime = cloudBlob.Properties.LastModified.Value.UtcDateTime;
+                TimeSpan ts = DateTime.UtcNow - dateTime;
+                if(ts.TotalMinutes >= 2)
+                {
+                    // Delete file from scheduled container
+                    await cloudBlob.DeleteAsync();
+                    log.LogInformation($"File '{cloudBlob.Name}' deleted from container: {Config.ScheduledContainer}.");
+                }
+            }
+
         }
     }
 }
