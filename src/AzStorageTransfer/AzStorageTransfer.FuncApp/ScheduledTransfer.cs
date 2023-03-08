@@ -123,7 +123,7 @@ namespace AzStorageTransfer.FuncApp
             {
                 var dateTime = cloudBlob.Properties.LastModified.Value.UtcDateTime;
                 TimeSpan ts = DateTime.UtcNow - dateTime;
-                if(ts.Totaldays >= 14)
+                if(ts.TotalDays >= 14)
                 {
                     // Delete file from scheduled container
                     await cloudBlob.DeleteAsync();
