@@ -3,6 +3,7 @@ using Amazon.Util.Internal;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -14,9 +15,17 @@ namespace AzStorageTransfer.FuncApp
     {
         private readonly IAmazonS3 amazonS3;
 
+        /// <summary>
+        /// Cron expression to schedule execution.
+        /// </summary>
+        private const string CronSchedule = "0 */1 * * * *";
+        private readonly CloudBlobContainer liveBlobContainer;
+        private readonly CloudBlobClient cloudBlobClient;
+
         public FileTriggeredTransfer(IAmazonS3 amazonS3)
         {
             this.amazonS3 = amazonS3;
+            this.liveBlobContainer = this.cloudBlobClient.GetContainerReference(Config.LiveContainer);
         }
 
         [FunctionName(nameof(FileTriggeredTransfer))]
@@ -57,6 +66,36 @@ namespace AzStorageTransfer.FuncApp
             }
         }
 
+        /// <summary>
+        /// Scheduled copy of files from Az blob container 'scheduled' to S3 and then moved to an archive container.
+        /// </summary>
+        [FunctionName(nameof(ScheduledTransfer))]
+        public async Task Run([TimerTrigger(CronSchedule, RunOnStartup = true)] TimerInfo myTimer, ILogger log)
+        {
+            log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+
+            var archiveBlobItems = liveBlobContainer.ListBlobs(useFlatBlobListing: true);
+            foreach (CloudBlockBlob item in archiveBlobItems)
+            {
+                await CheckArchiveBlobAsync(item, log);
+            }
+        }
+
+        private async Task CheckArchiveBlobAsync(CloudBlockBlob cloudBlob, ILogger log)
+        {
+            if (cloudBlob.Properties.LastModified != null)
+            {
+                var dateTime = cloudBlob.Properties.LastModified.Value.UtcDateTime;
+                TimeSpan ts = DateTime.UtcNow - dateTime;
+                if (ts.TotalMinutes >= 2)
+                {
+                    // Delete file from scheduled container
+                    await cloudBlob.DeleteAsync();
+                    log.LogInformation($"File '{cloudBlob.Name}' deleted from container: {Config.ScheduledContainer}.");
+                }
+            }
+
+        }
+
     }
-    
 }
