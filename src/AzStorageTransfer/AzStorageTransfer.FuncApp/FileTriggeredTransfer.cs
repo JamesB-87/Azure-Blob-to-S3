@@ -21,7 +21,7 @@ namespace AzStorageTransfer.FuncApp
 
         [FunctionName(nameof(FileTriggeredTransfer))]
         public async Task Run(
-            [BlobTrigger("%LiveContainer%/{name}", Connection = nameof(Config.DataStorageConnection))]
+            [BlobTrigger("%ArchiveContainer%/{name}", Connection = nameof(Config.DataStorageConnection))]
             ICloudBlob myBlob,
             string name,
             ILogger log)
