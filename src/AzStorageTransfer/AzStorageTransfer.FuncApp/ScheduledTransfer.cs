@@ -19,7 +19,7 @@ namespace AzStorageTransfer.FuncApp
         /// <summary>
         /// Cron expression to schedule execution.
         /// </summary>
-        private const string CronSchedule = "0 */60 * * * *";
+        private const string CronSchedule = "0 */1 * * * *";
 
         /// <summary>
         /// Amazon S3 client.
@@ -28,6 +28,7 @@ namespace AzStorageTransfer.FuncApp
         private readonly CloudBlobClient cloudBlobClient;
         private readonly CloudBlobContainer scheduledBlobContainer;
         private readonly CloudBlobContainer archiveBlobContainer;
+        private readonly CloudBlobContainer liveBlobContainer;
 
         public ScheduledTransfer(IAmazonS3 amazonS3)
         {
@@ -35,7 +36,9 @@ namespace AzStorageTransfer.FuncApp
             this.cloudBlobClient = CloudStorageAccount.Parse(Config.DataStorageConnection).CreateCloudBlobClient();
             this.scheduledBlobContainer = this.cloudBlobClient.GetContainerReference(Config.ScheduledContainer);
             this.archiveBlobContainer = this.cloudBlobClient.GetContainerReference(Config.ArchiveContainer);
+            this.liveBlobContainer = this.cloudBlobClient.GetContainerReference(Config.LiveContainer);
         }
+
 
         /// <summary>
         /// Scheduled copy of files from Az blob container 'scheduled' to S3 and then moved to an archive container.
@@ -45,16 +48,48 @@ namespace AzStorageTransfer.FuncApp
         {
             log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            var blobItems = scheduledBlobContainer.ListBlobs(useFlatBlobListing: true);
-            foreach (CloudBlockBlob item in blobItems)
-            {
-                await TrasferAndArchiveBlobAsync(item, log);
-            }
-
-            var archiveBlobItems = archiveBlobContainer.ListBlobs(useFlatBlobListing: true);
-            foreach(CloudBlockBlob item in archiveBlobItems)
+            var archiveBlobItems = liveBlobContainer.ListBlobs(useFlatBlobListing: true);
+            foreach (CloudBlockBlob item in archiveBlobItems)
             {
                 await CheckArchiveBlobAsync(item, log);
+            }
+        }
+
+        [FunctionName(nameof(FileTriggeredTransfer))]
+        public async Task TestRun(
+            [BlobTrigger("%LiveContainer%/{name}", Connection = nameof(Config.DataStorageConnection))]
+            ICloudBlob myBlob,
+            string name,
+            ILogger log)
+        {
+            log.LogInformation($"C# Blob trigger function Processed blob\n Name:{name} \n Size: {myBlob.Properties.Length} Bytes");
+
+
+
+            using (var ms = new MemoryStream())
+            {
+                // Download blob content to stream
+                await myBlob.DownloadToStreamAsync(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+
+                // Upload stream to S3
+                //await this.amazonS3.UploadObjectFromStreamAsync(Config.Aws.BucketName, name, ms, new Dictionary<string, object>());
+
+                var transfer = new Amazon.S3.Transfer.TransferUtility(amazonS3);
+                var request = new Amazon.S3.Transfer.TransferUtilityUploadRequest
+                {
+                    BucketName = Config.Aws.BucketName,
+                    Key = name,
+                    InputStream = ms,
+
+                };
+
+                request.Headers.ContentMD5 = myBlob.Properties.ContentMD5;
+
+                IDictionary<string, object> additionalProperties = new Dictionary<string, object>();
+                InternalSDKUtils.ApplyValues(request, additionalProperties);
+
+                transfer.Upload(request);
             }
         }
 
@@ -62,20 +97,20 @@ namespace AzStorageTransfer.FuncApp
         /// Exposes the same functionality described in the ScheduledTranfer but via an HttpTrigger.
         /// Used to integrate with Data Factory if needed.
         /// </summary>
-        [FunctionName(nameof(TransferFiles))]
-        public async Task<IActionResult> TransferFiles(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "tranferfiles")] HttpRequest req,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a request.");
-            var blobItems = scheduledBlobContainer.ListBlobs(useFlatBlobListing: true);
-            foreach (CloudBlockBlob item in blobItems)
-            {
-                await TrasferAndArchiveBlobAsync(item, log);
-            }
+        //[FunctionName(nameof(TransferFiles))]
+        //public async Task<IActionResult> TransferFiles(
+        //    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "tranferfiles")] HttpRequest req,
+        //    ILogger log)
+        //{
+        //    log.LogInformation("C# HTTP trigger function processed a request.");
+        //    var blobItems = scheduledBlobContainer.ListBlobs(useFlatBlobListing: true);
+        //    foreach (CloudBlockBlob item in blobItems)
+        //    {
+        //        await TrasferAndArchiveBlobAsync(item, log);
+        //    }
 
-            return new OkResult();
-        }
+        //    return new OkResult();
+        //}
 
         private async Task TrasferAndArchiveBlobAsync(CloudBlockBlob cloudBlob, ILogger log)
         {
@@ -123,7 +158,7 @@ namespace AzStorageTransfer.FuncApp
             {
                 var dateTime = cloudBlob.Properties.LastModified.Value.UtcDateTime;
                 TimeSpan ts = DateTime.UtcNow - dateTime;
-                if(ts.TotalDays >= 14)
+                if(ts.TotalMinutes >= 2)
                 {
                     // Delete file from scheduled container
                     await cloudBlob.DeleteAsync();
