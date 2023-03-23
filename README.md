@@ -5,7 +5,9 @@
 
 
 
-This is a solution based on Azure Functions to transfer Azure Blob Storage files to AWS S3.
+This is a solution based on Azure Functions to transfer Azure Blob Storage files to AWS S3. 
+For files placed into the 'Live' folder, it will copy these to an AWS S3 bucket, it will copy to an S3 bucket with Object lock enabled also (redeveloped for this). The scheduled trigger will also run aginst the 'Live' & 'Archive' folder every hour to check for files older than 60 days before deleting them.
+On an hourly trigger, files placed into the 'Scheduled' folder get copied to the S3 Bucket and moved from the 'Scheduled' folder to the 'Archive' folder
 
 The architecture of the solution is as depicted on the following diagram:
 
