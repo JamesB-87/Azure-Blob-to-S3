@@ -47,8 +47,9 @@ namespace AzStorageTransfer.FuncApp
                     InputStream = ms,
                     
                 };
-                
-                request.Headers.ContentMD5 = myBlob.Properties.ContentMD5;
+
+                // Commented out the below for testing SQL bak file
+               //request.Headers.ContentMD5 = myBlob.Properties.ContentMD5;
 
                 IDictionary<string, object> additionalProperties = new Dictionary<string, object>();
                 InternalSDKUtils.ApplyValues(request, additionalProperties);
